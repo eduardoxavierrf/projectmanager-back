@@ -1,4 +1,7 @@
 import { Response, Request } from 'express';
+
+import { getCustomRepository } from 'typeorm';
+import UserRepository from '../repositories/UserRepository';
 import AuthenticateUserService from '../services/AuthenticateUserService';
 
 export default class AuthenticateController {
@@ -8,7 +11,8 @@ export default class AuthenticateController {
     ): Promise<Response> {
         const { email, password } = request.body;
 
-        const autheticateUser = new AuthenticateUserService();
+        const userRepository = getCustomRepository(UserRepository);
+        const autheticateUser = new AuthenticateUserService(userRepository);
 
         const { user, access_token } = await autheticateUser.execute({
             email,

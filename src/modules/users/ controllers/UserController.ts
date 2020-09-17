@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
-import { getRepository } from 'typeorm';
+import { getRepository, getCustomRepository } from 'typeorm';
 import CreateUserService from '../services/CreateUserService';
 import DeleteUserService from '../services/DeleteUserService';
 import User from '../models/User';
 import AppError from '../../../shared/errors/AppError';
+import UserRepository from '../repositories/UserRepository';
 
 export default class UserController {
     public async create(
@@ -11,8 +12,8 @@ export default class UserController {
         response: Response,
     ): Promise<Response> {
         const { name, email, password } = request.body;
-
-        const createUser = new CreateUserService();
+        const userRepository = getCustomRepository(UserRepository);
+        const createUser = new CreateUserService(userRepository);
 
         const user = await createUser.execute({ name, email, password });
 
@@ -24,8 +25,8 @@ export default class UserController {
         response: Response,
     ): Promise<Response> {
         const { user_id } = request.params;
-
-        const deleteUser = new DeleteUserService();
+        const userRepository = getCustomRepository(UserRepository);
+        const deleteUser = new DeleteUserService(userRepository);
 
         await deleteUser.execute(user_id, request.user.id);
 
@@ -39,6 +40,7 @@ export default class UserController {
         const { page } = request.query;
         const pageNumber = Number(page);
 
+        // eslint-disable-next-line no-restricted-globals
         if (isNaN(pageNumber)) {
             throw new AppError(
                 'Page is not a number',
@@ -58,6 +60,7 @@ export default class UserController {
         const users = await userRepository.find({
             skip: 10 * pageNumber,
             take: 10,
+            select: ['id', 'name', 'email', 'created_at', 'updated_at'],
         });
 
         const previous =

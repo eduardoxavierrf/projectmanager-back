@@ -24,6 +24,7 @@ class Project {
     @Column('time with time zone')
     due_date: Date;
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @ManyToMany(type => User)
     @JoinTable({ name: 'project_users' })
     users: User[];
