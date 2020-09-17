@@ -1,8 +1,8 @@
-import { getRepository } from 'typeorm';
+/* eslint-disable no-useless-constructor */
 import { hash } from 'bcryptjs';
-
 import AppError from '../../../shared/errors/AppError';
 import User from '../models/User';
+import IUserRepository from '../repositories/IUserRepository';
 
 interface Request {
     name: string;
@@ -13,6 +13,8 @@ interface Request {
 }
 
 export default class CreateUserService {
+    constructor(private userRepository: IUserRepository) {}
+
     public async execute({ name, email, password }: Request): Promise<User> {
         if (password.length < 6) {
             throw new AppError(
@@ -21,11 +23,7 @@ export default class CreateUserService {
             );
         }
 
-        const userRepository = getRepository(User);
-
-        const checkUserExist = await userRepository.findOne({
-            where: { email },
-        });
+        const checkUserExist = await this.userRepository.findByEmail(email);
 
         if (checkUserExist) {
             throw new AppError('Email already exists!', 'Email já existe!');
@@ -33,13 +31,13 @@ export default class CreateUserService {
 
         const hashedPassword = await hash(password, 10);
 
-        const user = userRepository.create({
+        const user = this.userRepository.create({
             name,
             email,
             password: hashedPassword,
         });
 
-        await userRepository.save(user);
+        await this.userRepository.save(user);
 
         delete user.password;
 

@@ -1,4 +1,4 @@
-import { getRepository } from 'typeorm';
+/* eslint-disable no-useless-constructor */
 import { compare } from 'bcryptjs';
 
 import { sign } from 'jsonwebtoken';
@@ -6,6 +6,7 @@ import AppError from '../../../shared/errors/AppError';
 import authConfig from '../../../config/auth';
 
 import User from '../models/User';
+import IUserRepository from '../repositories/IUserRepository';
 
 interface Request {
     email: string;
@@ -19,10 +20,10 @@ interface Response {
 }
 
 class AuthenticateUserService {
-    public async execute({ email, password }: Request): Promise<Response> {
-        const userRepository = getRepository(User);
+    constructor(private userRepository: IUserRepository) {}
 
-        const user = await userRepository.findOne({ where: { email } });
+    public async execute({ email, password }: Request): Promise<Response> {
+        const user = await this.userRepository.findByEmail(email);
 
         if (!user) {
             throw new AppError(

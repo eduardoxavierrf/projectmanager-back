@@ -1,49 +1,36 @@
-import { getRepository, createConnection, Repository } from 'typeorm';
-import CreateUserService from './CreateUserService';
+import FakeUserRepository from '../repositories/fakes/FakeUserRepository';
 import DeleteUserService from './DeleteUserService';
-import User from '../models/User';
+import CreateUserService from './CreateUserService';
 import AppError from '../../../shared/errors/AppError';
 
 describe('Delete User', () => {
-    let user: User;
-    let userRepository: Repository<User>;
-    let createUser: CreateUserService;
+    it('should be able to delete a user', async () => {
+        const fakeRepository = new FakeUserRepository();
+        const createUser = new CreateUserService(fakeRepository);
+        const deleteUser = new DeleteUserService(fakeRepository);
 
-    beforeAll(async () => {
-        await createConnection();
-        userRepository = getRepository(User);
-
-        createUser = new CreateUserService();
-
-        user = await createUser.execute({
-            name: 'testdevelopment',
-            email: 'testdevelopment@development.dev',
+        const user = await createUser.execute({
+            name: 'TestDevelop',
+            email: 'test@development.com',
             password: 'testdevelopment',
         });
+
+        await deleteUser.execute(user.id, user.id);
     });
 
-    afterAll(async () => {
-        const checkUser = await userRepository.findOne(user.id);
-        if (checkUser) {
-            await userRepository.delete(user.id);
-        }
-    });
+    it('should not be able to delete a user with a diferent user request', async () => {
+        const fakeRepository = new FakeUserRepository();
+        const createUser = new CreateUserService(fakeRepository);
+        const deleteUser = new DeleteUserService(fakeRepository);
 
-    it('should be able to delete a user', async () => {
-        const deleteUser = new DeleteUserService();
+        const user = await createUser.execute({
+            name: 'TestDevelop',
+            email: 'test@development.com',
+            password: 'testdevelopment',
+        });
 
-        const deleted = await deleteUser.execute(user.id, user.id);
-        expect(deleted).toBe(true);
-    });
-
-    it('should not be able to delete other user', async () => {
-        const deleteUser = new DeleteUserService();
-        let resp: AppError | boolean;
-        try {
-            resp = await deleteUser.execute(user.id, 'asdasdas-dasdasd');
-        } catch (error) {
-            resp = error;
-        }
-        expect(resp).toBeInstanceOf(AppError);
+        expect(
+            deleteUser.execute(user.id, 'asdasda-asdasd-asdasda'),
+        ).rejects.toBeInstanceOf(AppError);
     });
 });
