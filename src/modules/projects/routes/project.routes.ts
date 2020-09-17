@@ -9,5 +9,6 @@ const projectRouter = Router();
 projectRouter.use(EnsureAuthentication);
 projectRouter.post('/', projectController.create);
 projectRouter.patch('/:project_id', projectController.update);
+projectRouter.delete('/:project_id', projectController.delete);
 
 export default projectRouter;

@@ -3,6 +3,7 @@ import { getRepository } from 'typeorm';
 import CreateProjectService from '../services/CreateProjectService';
 import Project from '../models/Project';
 import EditProjectService from '../services/EditProjectService';
+import AppError from '../../../shared/errors/AppError';
 
 export default class ProjectController {
     public async create(
@@ -42,5 +43,23 @@ export default class ProjectController {
         });
 
         return response.status(200).json(project);
+    }
+
+    public async delete(
+        request: Request,
+        response: Response,
+    ): Promise<Response> {
+        const { project_id } = request.params;
+        const projectRepository = getRepository(Project);
+
+        const checkProjectExits = await projectRepository.findOne(project_id);
+
+        if (!checkProjectExits) {
+            throw new AppError('Project do not exits', 'Projecto não existe');
+        }
+
+        await projectRepository.delete(project_id);
+
+        return response.status(204).json();
     }
 }
