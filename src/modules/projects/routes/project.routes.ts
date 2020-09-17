@@ -8,5 +8,6 @@ const projectRouter = Router();
 
 projectRouter.use(EnsureAuthentication);
 projectRouter.post('/', projectController.create);
+projectRouter.patch('/:project_id', projectController.update);
 
 export default projectRouter;
